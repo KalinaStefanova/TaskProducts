@@ -8,4 +8,4 @@ After you set up the project and restore the database -  build it and open Produ
 
 BUGFIX:  
 In Producs.html at row 66 the "txtaddProductID" input element should not be disabled: input type="text" id="txtaddProductID" disabled="disabled" 
-Please, replace this code with: input type="text" id="txtaddProductID" 
+Please, remove the "disabled" attribute.
