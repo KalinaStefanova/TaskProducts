@@ -1,0 +1,169 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+    <link href="WebClient/styles/Styles.css" rel="stylesheet" />
+</head>
+<body>
+    <div id="header">
+
+        <p>
+            <a id="tab1" href="Products.html" title="Products">Products</a> |
+            <a id="tab2" href="Categories.html" title="Categories">Categories</a> |
+            <a id="tab3" href="ProductSearch.html" title="ProductSearch">Product Search</a> 
+        </p>
+    </div>
+    <div id="container4">
+        <div id="container3">
+            <div id="container2">
+                <div id="container1">
+                    <div id="col1">
+                        <!-- Column one start -->
+                        <h2>All Categories</h2>
+                        <ul id="categories" />
+                        <br />
+                        <!-- Column one end -->
+                    </div>
+                    <div id="col2">
+                        <!-- Column two start --><h2>Search by ID</h2>
+                        <input type="text" id="categoryId" size="15" />
+                        <input type="button" value="Search" onclick="find();" />
+                        <p id="category" />
+                        <br />
+                        <!-- Column two end -->
+                    </div>
+                    <div id="col3">
+                        <!-- Column three start -->
+                        <h2>Insert new</h2>
+                        <div>
+                            <div></div>
+                            <div><p id="message" /></div>
+                            <div> name</div>
+                            <div><input type="text" id="txtaddCategoryID"  /></div>
+                            <div>description</div>
+                            <div><input type="text" id="txtDescription" /></div>
+                        </div>
+                        <input type="button" value="Insert" onclick="insert();" />
+                        <p></p>
+                        <!-- Column three end -->
+                    </div>
+                    <div id="col4">
+                        <h2>Delete</h2>
+                        <select id="deleteByID"></select> 
+                        <input type="button" value="Delete" onclick="deleteCategory();" />
+                        <br />
+                        <!-- Column four end -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.0.3.min.js"></script>
+    <script>
+        var uri = 'api/categories';
+        var categories;
+
+        $(document).ready(function () {
+            getAllCategories();
+        });
+
+
+        function getAllCategories() {
+            $.getJSON(uri)
+               .done(function (data) {
+                   categories = data;
+                   $("#categories").empty();
+                   $('#deleteByID').empty();
+                   // On success, 'data' contains a list of categories.
+                   $.each(data, function (key, item) {
+                       // populate categories list
+                       $('<li>', { text: formatItem(item) }).appendTo($('#categories'));
+                       // populate dropdown in Delete section
+                       $('<option />', { value: item._id, text: item._id }).appendTo($('#deleteByID'));
+                   });
+
+               });
+        }
+
+        function formatItem(item) {        
+            return "id:" + item._id + " - " + item.description;
+        }
+
+        function find() {
+            var id = $('#categoryId').val();
+            $.getJSON(uri + '/' + id)
+                .done(function (data) {
+                    $('#category').text(formatItem(data));
+                })
+                .fail(function (jqXHR, textStatus, err) {
+                    $('#category').text(err);
+                });
+        }
+
+        function checkCategory() {
+            
+            var id = $('#txtaddCategoryID').val();
+            var exists;
+            $.getJSON(uri + '/' + id)
+                .done(function (data) {
+                    $('#message').text('Category already exists'); 
+                    exists = true; 
+                    return exists;
+                })
+                .fail(function (jqXHR, textStatus, err) {
+                    $('#message').text(' ');
+                    exists = false;
+                    return exists;
+                });          
+        }
+
+        function insert() {
+            var exists = checkCategory(); 
+            if (exists) return;
+
+            jQuery.support.cors = true; 
+            var category = {
+                _id: $('#txtaddCategoryID').val(),
+                description: $('#txtDescription').val()
+            }; 
+
+            $.ajax({
+                url: uri,
+                type: 'POST',
+                data: JSON.stringify(category),
+                contentType: "application/json;charset=utf-8",
+                success: function (data) {
+                    getAllCategories();
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    alert(jqXHR + '\n' + textStatus + '\n' + errorThrown);
+                }
+            });            
+        }
+
+        function deleteCategory() {
+            jQuery.support.cors = true;
+            var _id = $('#deleteByID').val();
+         
+            $.ajax({
+                url: uri + '/' + _id,
+                type: 'DELETE',
+                contentType: "application/json;charset=utf-8",
+                success: function (data) {
+                    getAllCategories();
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    alert(jqXHR + '\n' + textStatus + '\n' + errorThrown);
+                }
+            });        
+        }
+
+        function WriteResponse(data) {
+            $('<li>', { text: formatItem(data) }).appendTo($('#products'));
+        }
+
+    </script>
+</body>
+</html>

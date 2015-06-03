@@ -1,0 +1,259 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+    <link href="WebClient/styles/Styles.css" rel="stylesheet" />
+</head>
+<body>
+    <div id="header">
+        <p>
+            <a id="tab1" href="Products.html" title="Products">Products</a> |
+            <a id="tab2" href="Categories.html" title="Categories">Categories</a> |
+            <a id="tab3" href="ProductSearch.html" title="ProductSearch">Product Search</a>
+        </p>
+    </div>
+    <div id="container4">
+        <div id="container3">
+            <div id="container2">
+                <div id="container1">
+                    <div id="col1">
+                        <!-- Column one start -->
+
+                        <h2>All Products</h2>
+                        <!--<ul id="products" />-->
+                        <div id="products"></div>
+                        <br />
+                        <!-- Column one end -->
+                    </div>
+                    <div id="col2">
+                        <h2>Edit</h2>
+                        <div>
+                            <div></div>
+                            <div><p id="message" /></div>
+                            <div>product ID</div>
+                            <div>
+                                <input type="text" id="productIDUpdate" disabled="disabled" />
+                            </div>
+                            <div>name</div>
+                            <div><input type="text" id="txtEditProductName" /></div>
+                            <div>description</div>
+                            <div><input type="text" id="txtEditProductDescription" /></div>
+                            <div>category name</div>
+                            <div>
+                                <select id="categoryUpdate"></select>
+                            </div>
+                            <input type="button" value="Update" onclick="update();" />
+                        </div>
+                        <br />
+                        <!-- Column two end -->
+                    </div>
+                    <div id="col3">
+                        <!-- Column three start -->
+                        <h2>Insert</h2>
+                        <div>
+                            <div>
+                                <div>
+                                    <b>1. Select and upload the product image file to server</b>
+                                    <input id="fileUpload" type="file" />
+                                    <input id="btnUploadFile" type="button" value="Upload File" onclick="uploadProductImage();" />
+                                </div>
+                            </div>
+                            <div></div>
+                            <hr />
+                            <div><p id="message" /></div>
+                            <b>2. Insert new product.</b>
+                            <div>product ID</div>
+                            <div><input type="text" id="txtaddProductID" disabled="disabled" /></div>
+                            <div>name</div>
+                            <div><input type="text" id="txtaddProductName" /></div>
+                            <div>description</div>
+                            <div><input type="text" id="txtProductDescription" /></div>
+                            <div>category name</div>
+                            <div>
+                                <select id="categoryName"></select>
+                            </div>
+                        </div>
+                        <br />
+                        <input type="button" value="Insert" onclick="insert();" />
+                        <p></p>
+                        <!-- Column three end -->
+                    </div>
+                    <div id="col4">
+                        <h2>Delete</h2>
+                        <h3>Delete by id</h3>
+                        <select id="deleteByID"></select>
+                        <input type="button" value="Delete" onclick="deleteProduct();" />
+                        <br />
+                        <!-- Column four end -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.0.3.min.js"></script>
+    <script>
+        var uri = 'api/product';
+        var uriCategories = "api/categories";   
+        var categories;
+
+        $(document).ready(function () {
+            getAllProducts();
+            getAllCategories();
+        });
+
+        function getAllProducts() {
+            $(document).ready(function () {
+
+                $.getJSON(uri)
+                    .done(function (data) {
+                        $("#products").empty();
+                        $("#deleteByID").empty();
+                        // On success, 'data' contains a list of products.
+                        $.each(data, function (key, item) {
+                            // populate produts list
+                            $('<div>', { html: formatItem(item) }).appendTo($('#products'));
+                            // populate products <select> in 'Delete' section
+                            $('<option />', { value: item.productID, text: item.name }).appendTo($('#deleteByID'));                      
+                        });
+                        // calculate the productID for next product
+                        $("#txtaddProductID").val((data.length +1));
+                    });
+            });
+        }
+
+        function getAllCategories() {
+            $.getJSON(uriCategories)
+               .done(function (data) {
+                   categories = data;
+
+                   $.each(data, function (key, item) {
+                       $('<option />', { text: item._id }).appendTo($('#categoryName'));
+                       $('<option />', { text: item._id }).appendTo($('#categoryNameSearch'));
+                       $('<option />', { text: item._id }).appendTo($('#categoryUpdate'));
+                      
+                   });
+               });
+
+        }
+
+        function formatItem(item) {
+            return "<div>database ID: " + item._id +
+                "</div><div>product ID: " + item.productID +
+                "</div><div>name: " + item.name +
+                "</div><div>description: " + item.description + "</div><div>" +
+                "<img src='" + item.image + "'>" +
+                "<input type='button' id='" + item.productID + "' value='Edit' onclick='edit(" + item.productID + ")' /><hr/> ";
+        }
+
+        function uploadProductImage() {
+
+            var data = new FormData();
+            var files = $("#fileUpload").get(0).files;
+            
+            // Add the uploaded image content to the form data collection
+            if (files.length > 0) {
+                data.append("UploadedImage", files[0]);
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "/api/upload",
+                contentType: false,
+                processData: false,
+                data: data
+            });
+
+        }
+   
+
+        function insert() {
+
+                jQuery.support.cors = true;
+
+                var product = {
+                    productID: $('#txtaddProductID').val(),
+                    name: $('#txtaddProductName').val(),
+                    description: $('#txtProductDescription').val(),
+                    image: "/Images/" + $('#fileUpload')[0].files[0].name,
+                    categoryName: $('#categoryName').val()
+                };
+
+                $.ajax({
+                    url: uri,
+                    type: 'POST',
+                    data: JSON.stringify(product),
+                    contentType: "application/json;charset=utf-8",
+                    success: function (data) {
+                        getAllProducts();
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        alert(jqXHR + '\n' + textStatus + '\n' + errorThrown);
+                    }
+                });
+           
+        }
+
+        function deleteProduct() {
+            jQuery.support.cors = true;
+            var _id = $('#deleteByID').val();
+
+            $.ajax({
+                url: uri + '/' + _id,
+                type: 'DELETE',
+                contentType: "application/json;charset=utf-8",
+                success: function (data) {
+                    getAllProducts();
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    alert(jqXHR + '\n' + textStatus + '\n' + errorThrown);
+                }
+            });
+           
+        }
+
+        function edit(productID) {           
+            var id = productID;
+
+            $.getJSON(uri + '/' + id)
+                .done(function (data) {
+                    $('#productIDUpdate').val(data.productID);
+                    $('#txtEditProductName').val(data.name);
+                    $('#txtEditProductDescription').val(data.description);
+                    $("#categoryUpdate").val(data.categoryName);
+                })
+                .fail(function (jqXHR, textStatus, err) {
+                    $('#product').text('Error: ' + err);
+                });
+
+        }
+
+        function update() {
+            jQuery.support.cors = true;
+
+            var product = {
+                productID: $('#productIDUpdate').val(),
+                name: $('#txtEditProductName').val(),
+                description: $('#txtEditProductDescription').val(),
+                image: $('#txtProductImage').val(),
+                categoryName: $('#categoryUpdate').val()
+            };
+
+            $.ajax({
+                url: uri,
+                type: 'PUT',
+                data: JSON.stringify(product),
+                contentType: "application/json;charset=utf-8",
+                success: function (data) {
+                    getAllProducts();
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    alert(jqXHR + '\n' + textStatus + '\n' + errorThrown);
+                }
+            });
+
+        }
+
+        
+    </script>
+</body>
+</html>

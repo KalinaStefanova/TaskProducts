@@ -1,0 +1,135 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+</head>
+<body>
+    <div id="header">
+        <p>
+            <a id="tab1" href="Products.html" title="Products">Products</a> |
+            <a id="tab2" href="Categories.html" title="Categories">Categories</a> |
+            <a id="tab3" href="ProductSearch.html" title="ProductSearch">Product Search</a> 
+        </p>
+    </div>
+
+
+    <div id="container1">
+        <div id="col3">
+
+            <h2>Category</h2>
+            <select id="categoryNameSearch"></select>
+            <input type="button" value="Search by category" onclick="findByCategory();" />
+            <br />
+            <div id="products"></div>
+            <p id="productsFound" />
+            <hr />
+        </div>
+
+        <div id="col1">
+            <h2>Search by ID</h2>
+            <input type="text" id="productId" size="15" />
+            <input type="button" value="Search by product ID" onclick="find();" />
+            <br />
+            <p id="product" />
+            <hr />
+        </div>
+        <div id="col2">
+            <h2>Product name</h2>
+            <input type="text" id="productName" size="15" />
+            <input type="button" value="Search by name" onclick="findByName();" />
+            <br />           
+            <hr />
+        </div>
+        <p id="productFound" />
+
+    </div>
+
+    <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.0.3.min.js"></script>
+    <script>
+        var uri = 'api/product';
+        var uriCategories = "api/categories";
+        var categories;
+
+        $(document).ready(function () {
+            getAllCategories();
+        });
+
+        function getAllCategories() {
+            $.getJSON(uriCategories)
+               .done(function (data) {
+                   categories = data;
+
+                   $.each(data, function (key, item) {
+                       $('<option />', { text: item._id }).appendTo($('#categoryName'));
+                       $('<option />', { text: item._id }).appendTo($('#categoryNameSearch'));
+
+                   });
+               });
+
+        }
+
+
+        function find() {
+            var id = $('#productId').val();
+
+            $.getJSON(uri + '/' + id)
+                .done(function (data) {
+                    $('#product').html(formatItem(data));
+                })
+                .fail(function (jqXHR, textStatus, err) {
+                    $('#product').text('Error: ' + err);
+                });
+        }
+
+
+        function findByName() {  
+            var productName = $('#productName').val();
+
+            $.getJSON('api/product/name?name=' + productName)
+                .done(function (data) {
+                    $('#productFound').html(formatItem(data));
+                })
+                .fail(function (jqXHR, textStatus, err) {
+                    $('#productFound').text('Error: ' + err);
+                });
+        }
+
+
+        function findByCategory() {
+            var category = $('#categoryNameSearch').val();
+
+            $('#productsFound').empty();
+            $('#products').empty();
+            $.getJSON('api/product/category?categoryName=' + category)
+                .done(function (data) {
+                    formatItemArray(data);                   
+                })
+                .fail(function (jqXHR, textStatus, err) {
+                    $('#productsFound').text(err);
+                });
+        }
+
+        // this is not the best option, should be changed
+        function formatItem(item) {
+            return "<div>database ID: " + item._id +
+                "</div><div>product ID: " + item.productID +
+                "</div><div>name: " + item.name +
+                "</div><div>description: " + item.description + "</div><div>" +
+                "<img src='" + item.image + "'>";
+
+        }
+        function formatItemArray(data) {
+            var renderedOutput = "";
+            $.each(data, function (index, value) {
+                $('<div />', {
+                    text: "productID: " + value.productID +
+                        ", name: " + value.name
+                }).appendTo($('#products'));
+            });
+
+        }
+
+    </script>
+</body>
+
+</html>

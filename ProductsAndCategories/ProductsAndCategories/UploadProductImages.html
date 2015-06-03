@@ -1,0 +1,51 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+</head>
+<body>
+    <div id="header">
+
+ 
+        <p>
+            <a id="tab1" href="Products.html" title="Products">Products</a> |
+            <a id="tab2" href="Categories.html" title="Categories">Categories</a> |
+            <a id="tab3" href="ProductSearch.html" title="ProductSearch">Product Search</a> |
+            <a id="tab4" href="UploadProductImages.html" title="Upload product images">Upload product images</a>
+        </p>
+    </div>
+    <div id="container1">
+        <div>
+            Select File to Upload: <input id="fileUpload" type="file" />
+            <input id="btnUploadFile" type="button" value="Upload File" onclick="upload();" />
+        </div>
+
+        </div>
+        <script src="http://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.0.3.min.js"></script>
+    <script>
+
+        function upload() {
+
+            var data = new FormData();
+
+            var files = $("#fileUpload").get(0).files;
+            debugger;
+            // Add the uploaded image content to the form data collection
+            if (files.length > 0) {
+                data.append("UploadedImage", files[0]);
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "/api/upload",
+                contentType: false,
+                processData: false,
+                data: data
+            });
+
+
+        }
+
+    </script>
+</body>
+</html>
